@@ -12,19 +12,19 @@ import java.util.List;
 public class Axial extends Coordinate2D {
     public final int q;
     public final int r;
+    public final int z;
 
     public Axial(int q, int r) {
         this.q = q;
         this.r = r;
+        this.z = -q-r;
+    }
+    public Axial(int q, int r, int z){
+        this.q = q;
+        this.r = r;
+        this.z = z;
     }
 
-    /**
-     * Convert this coordinate to the equivalent cubic coordinate
-     * @return
-     */
-    public Cubic toCubic() {
-        return new Cubic(q, r, -q - r);
-    }
 
     /**
      * Convert this coordinate to the equivalent offset coordinate
@@ -46,7 +46,7 @@ public class Axial extends Coordinate2D {
      * @param n
      * @return
      */
-    public List<Coordinate> ringAround(int n) {
+    public List<Coordinate> getRingAround(int n) {
 
         List<Coordinate> returnThis = new ArrayList<>();
 
@@ -115,7 +115,8 @@ public class Axial extends Coordinate2D {
      * @return
      */
     public double distance(Coordinate c) {
-        return this.toCubic().distance(c);
+        Axial other = c.toAxial();
+        return(Math.abs(other.q-this.q)+Math.abs(other.r-this.r) + Math.abs(other.z-this.z))/2;
     }
 
     /**
@@ -127,28 +128,13 @@ public class Axial extends Coordinate2D {
         return new Axial(c.toAxial().q-this.q,c.toAxial().r-this.r);
     }
 
-    @Override
-    public boolean equals(Object o) throws ClassCastException {
-       Coordinate c = (Coordinate)o;
-       Axial a = c.toAxial();
-       boolean b = ((a.r== r) && (a.q == q));
-       return b;
-    }
-
-    @Override
-    public int hashCode(){
-        int tmp = ( q +  ((r+1)/2));
-        return r +  ( tmp * tmp);
-    }
-
-
 
     /**
      * Return the coordiante in the list that is closest to this coordinate
      * @param list
      * @return
      */
-    public Coordinate closestTo(List<Coordinate> list){
+    public Coordinate closestOutOF(List<Coordinate> list){
         double distance = Double.MAX_VALUE;
         Coordinate closest = null;
         for(Coordinate c: list){
@@ -157,8 +143,82 @@ public class Axial extends Coordinate2D {
                 closest=c;
             }
         }
-
         return closest;
+    }
+
+    @Override
+    public Coordinate rotate(int degrees) {
+        return rotateAround(new Axial(0,0),degrees);
+    }
+
+    @Override
+    public Coordinate rotateAround(Coordinate c, int degrees) {
+        int numSteps= (degrees+30)%60;
+
+        Coordinate difference = distanceVector(c).toAxial();
+        if(numSteps<0){
+            for(int i =0; i > numSteps; i--){
+                difference = rotateOneStepAntiClockwise(difference);
+            }
+        }else{
+            for(int i =0; i < numSteps; i++){
+                difference = rotateOneStepClockwise(difference);
+            }
+        }
+        Axial a = difference.toAxial();
+        return(new Axial(q+a.q,r+a.r));
+    }
+
+    /*
+     */
+    private Coordinate rotateOneStepClockwise(Coordinate coordinate){
+        return new Cubic(-q,-r,-z);
+    }
+
+    private Coordinate rotateOneStepAntiClockwise(Coordinate coordinate){
+
+        return new Cubic(-r,-z,-q);
+    }
+
+    @Override
+    public boolean equals(Object o) throws ClassCastException {
+        Coordinate c = (Coordinate)o;
+        Axial a = c.toAxial();
+        boolean b = ((a.r== r) && (a.q == q));
+        return b;
+    }
+
+    @Override
+    public int hashCode(){
+        int tmp = ( q +  ((r+1)/2));
+        return r +  ( tmp * tmp);
+    }
+
+    /**
+     * https://www.redblobgames.com/grids/hexagons/#map-storage
+     * @param x
+     * @param y
+     * @param z
+     * @return
+     */
+    public static Axial round(double x, double y, double z){
+        int rx = (int)Math.round(x);
+        int ry = (int)Math.round(y);
+        int rz = (int)Math.round(z);
+
+        double diffx = Math.abs(x-rx);
+        double diffy = Math.abs(y-ry);
+        double diffz = Math.abs(z-rz);
+
+        if(diffx > diffy && diffx> diffz){
+            rx = -ry-rz;
+        }else if(diffy>diffz){
+            ry = -rx-rz;
+        }
+        else{
+            rz = -rx-ry;
+        }
+        return new Axial(rx,ry,rz);
     }
 
 }

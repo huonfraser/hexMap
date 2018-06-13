@@ -46,6 +46,16 @@ public class Offset extends Coordinate2D {
     }
 
     @Override
+    public Coordinate rotate(int degrees) {
+        return toAxial().rotate(degrees);
+    }
+
+    @Override
+    public Coordinate rotateAround(Coordinate c, int degrees) {
+        return toAxial().rotateAround(c,degrees);
+    }
+
+    @Override
     public boolean equals(Object o) throws ClassCastException {
         Coordinate c = (Coordinate)o;
         Offset a = c.toOffset();

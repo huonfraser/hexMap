@@ -17,10 +17,11 @@ public interface Coordinate {
 
     public Axial toAxial();
     public Offset toOffset();
-    public Cubic toCubic();
 
     public List<Coordinate> getNeighbours();
     public Coordinate getNeighbour(int i);
+    public Coordinate rotate(int degrees); //rotates clockwise, rounds degrees to nearest 60
+    public Coordinate rotateAround(Coordinate c, int degrees); //rotates clockwise, rounds degrees to nearest60, doesn't handle negative degrees
 
     /**
      * Return coordinates that neighbour both one and two.
